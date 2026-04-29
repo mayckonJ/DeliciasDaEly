@@ -375,6 +375,7 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
         }
 
         .cart-item-img {
@@ -409,6 +410,28 @@
             font-size: 18px;
             cursor: pointer;
             margin-left: auto;
+        }
+
+        /* --- ESTILO DATA/HORARIO NO CARRINHO --- */
+        .cart-datetime-area {
+            width: 100%;
+            margin-top: 10px;
+            background: #fdf2fe;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .cart-datetime-area label {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--rodape);
+        }
+        .cart-datetime-area input {
+            padding: 5px;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
         }
 
         /* --- FOOTER --- */
@@ -561,7 +584,7 @@
     <div class="card-localizacao">
         <h3 style="color: var(--rodape); margin-bottom: 10px;">📍 Local para Retirada</h3>
         <p style="color: #666; font-size: 14px;">Anápolis, Goiás<br>Rua das Bandeiras, Quadra 07, Lote 25 - Vila Esperança, Anápolis - CEP: 75133-520</p>
-        <a href="https://maps.app.goo.gl/hzHYok4Lj5engDAG9?g_st=ac" target="_blank" class="btn-maps">Ver no Google Maps</a>
+        <a href="https://maps.app.goo.gl/..." target="_blank" class="btn-maps">Ver no Google Maps</a>
     </div>
 
     <footer>
@@ -717,10 +740,11 @@
             const priceStr = el.querySelector('.prod-preco-novo').innerText.replace('R$ ', '').replace(',', '.').trim();
             const price = parseFloat(priceStr) || 0;
             const img = el.querySelector('.prod-img').src;
-            addToCart(name, price, img, event);
+            const idNum = parseInt(id.replace('prod-', ''));
+            addToCart(name, price, img, event, idNum);
         }
 
-        function addToCart(name, price, img, event) {
+        function addToCart(name, price, img, event, idNum) {
             const cake = document.createElement('div');
             cake.innerText = '🎂';
             cake.className = 'flying-cake';
@@ -742,7 +766,11 @@
             }, 1400);
             setTimeout(() => cake.remove(), 2800);
             const itemExistente = cart.find(i => i.name === name);
-            if(itemExistente) { itemExistente.qty++; } else { cart.push({ name, price, img, qty: 1 }); }
+            if(itemExistente) { 
+                itemExistente.qty++; 
+            } else { 
+                cart.push({ name, price, img, qty: 1, id: idNum, data: '', hora: '' }); 
+            }
             renderCart();
         }
 
@@ -755,6 +783,10 @@
             if (cart.length > 0) { floatingCart.classList.add('cart-vibrant'); } else { floatingCart.classList.remove('cart-vibrant'); }
             cart.forEach((item, index) => {
                 total += item.price * item.qty;
+                
+                // Verifica se o item é da categoria de demonstração (100-199)
+                const isAgendamento = item.id >= 100 && item.id <= 199;
+                
                 list.innerHTML += `
                     <div class="cart-item">
                         <img src="${item.img}" class="cart-item-img">
@@ -768,10 +800,24 @@
                             </div>
                         </div>
                         <span class="btn-remove" onclick="removeItem(${index})">🗑️</span>
+                        
+                        ${isAgendamento ? `
+                        <div class="cart-datetime-area">
+                            <label>Data e Horário (Ajendamento para o preparo do Bolo):</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="date" value="${item.data}" onchange="updateDateTime(${index}, 'data', this.value)" required>
+                                <input type="time" value="${item.hora}" onchange="updateDateTime(${index}, 'hora', this.value)" required>
+                            </div>
+                        </div>
+                        ` : ''}
                     </div>
                 `;
             });
             totalText.innerText = `Total: R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function updateDateTime(index, field, value) {
+            cart[index][field] = value;
         }
 
         function changeQty(index, delta) {
@@ -787,10 +833,22 @@
 
         function openCart() { document.getElementById('cartModal').style.display = 'flex'; }
         function closeCart() { document.getElementById('cartModal').style.display = 'none'; }
+        
         function abrirFinalizar() {
             if(cart.length === 0) return alert("Seu carrinho está vazio!");
+            
+            // Validação de data e hora obrigatória para itens de demonstração
+            for (let item of cart) {
+                if (item.id >= 100 && item.id <= 199) {
+                    if (!item.data || !item.hora) {
+                        return alert(`Por favor, selecione a Data e Horário para o bolo: ${item.name}`);
+                    }
+                }
+            }
+            
             document.getElementById('finalizarModal').style.display = 'flex';
         }
+        
         function fecharFinalizar() { document.getElementById('finalizarModal').style.display = 'none'; }
 
         function enviarPedidoWhatsApp() {
@@ -805,7 +863,11 @@
             mensagem += `*Itens:*%0A`;
             let total = 0;
             cart.forEach(item => {
-                mensagem += `- ${item.qty}x ${item.name} (R$ ${(item.price * item.qty).toFixed(2).replace('.', ',')})%0A`;
+                mensagem += `- ${item.qty}x ${item.name}`;
+                if (item.data && item.hora) {
+                    mensagem += ` (Agendado: ${item.data.split('-').reverse().join('/')} às ${item.hora})`;
+                }
+                mensagem += ` [R$ ${(item.price * item.qty).toFixed(2).replace('.', ',')}]%0A`;
                 total += item.price * item.qty;
             });
             mensagem += `%0A*Total: R$ ${total.toFixed(2).replace('.', ',')}*`;
