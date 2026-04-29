@@ -462,6 +462,26 @@
             border-radius: 10px;
             font-size: 16px;
         }
+
+        /* ESTILO LOCALIZAÇÃO */
+        .card-localizacao {
+            background: white;
+            margin: 20px 15px;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .btn-maps {
+            display: inline-block;
+            background: #4285F4;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -536,6 +556,12 @@
         </div>
         
         <button class="close-modal" onclick="fecharFinalizar()" style="margin-top: 40px; background: none; border: none; text-decoration: underline;">Voltar ao carrinho</button>
+    </div>
+
+    <div class="card-localizacao">
+        <h3 style="color: var(--rodape); margin-bottom: 10px;">📍 Local para Retirada</h3>
+        <p style="color: #666; font-size: 14px;">Anápolis, Goiás<br>Rua das Bandeiras, Quadra 07, Lote 25 - Vila Esperança, Anápolis - CEP: 75133-520</p>
+        <a href="https://maps.app.goo.gl/hzHYok4Lj5engDAG9?g_st=ac" target="_blank" class="btn-maps">Ver no Google Maps</a>
     </div>
 
     <footer>
